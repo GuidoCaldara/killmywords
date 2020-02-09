@@ -1,0 +1,44 @@
+
+
+.challenge-card{
+  padding: 21px 15px;
+  border: 1px solid #bfbfbf;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  width: 46%;
+  .button{
+    float: right; 
+  }
+  h4{
+    margin: 0px
+  }
+  p{
+    margin: 4px 0px
+  }
+  .challenge-creator-name{
+    
+  }
+  .card-tagline{
+    color: gray;
+    margin-top: 4px;
+    &.creator{
+      color: gray;
+      margin-top: 4px;
+      margin-top: 12px;
+      margin-bottom: 0px;  
+    }
+  }
+}
+
+.challenges-lsit-title-box{
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.challenges-list-container{
+  display: flex;
+  flex-wrap: wrap;
+  padding: 20px 0px;
+  justify-content: space-between;
+}

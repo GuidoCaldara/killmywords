@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
+
+body{
+  font-family: 'Roboto Mono', monospace;
+  color: rgb(43, 43, 43)
+}
+
+.button{
+  font-family: 'Roboto Mono', monospace;
+  padding: 12px 30px;
+  background-color: #ff4c4c;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-size: 12px;
+  &:hover{
+    background-color: #e41111;
+    cursor: pointer
+  }
+  &.small{
+    padding: 8px 12px;
+  }
+}
+
+input{
+  &:focus{
+    outline: none;
+  }
+}
+
+.challenge-popup-container{
+  width: 100%;
+  background: #000000bd;
+  height: 100%;
+  left: 0 ;
+  position: absolute;
+  top: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.challenge-popup{
+  width: 50%;
+  background-color: white;
+  position: absolute;
+  top: 20%;
+  padding: 20px;
+  border-radius: 8px;
+  &.game-popup{
+    text-align: center;
+  }
+  input{
+    width: 100%;
+    height: 32px;
+    border: none;
+    border-bottom: 1px solid #c3c3c3; 
+    font-size: 24px;
+    color: #464646;
+  }
+  .button{
+    float: right;
+    margin-top: 16px;
+  }
+  .closeIcon{
+    color: #dcdcdc;
+    float: right;
+
+  }
+}
