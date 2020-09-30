@@ -10,23 +10,34 @@ class GameBoard extends React.Component{
     this.creator = this.props.creator
     this.opponent = this.props.opponent
     this.state = {
+       score: {[this.creator]: 0, [this.opponent]: 0},
+       round: 1,
        spinner: true,
-       creatorReady: true,
-       opponentReady: true,
-       currentUserReady: true,
+       attackReady: false,
+       defenseReady: false,
        gameOn: false,
        countdown: false,
-       score: {creator: 0, opponent: 0},
        gameId: this.props.gameId,
        creatorInput: '',
-       creatorInputSize: 0,
-       gameCompleted: false
+       attackInputSize: 0,
+       gameCompleted: false,
+       attack: this.creator,
+       defense: this.opponent
      }
   }
 
-  endGame = () => {
-    this.setState({
-      gameCompleted: true
+  endGame = (winner) => {
+    let score = this.state.score
+    score[winner] += 1
+    database.ref('games/'+ this.props.gameId).update({
+      score: score,
+      round: this.state.round + 1,
+      creatorInput: '',
+      attackInputSize: '',
+      attackReady: false,
+      defenseReady: false,
+      attack: this.state.defense,
+      defense: this.state.attack
     })
   }
 
@@ -43,10 +54,10 @@ class GameBoard extends React.Component{
     this.filterArrays(word, creatorArray ).then((result) => {
       database.ref('games/'+ this.props.gameId).update({
          creatorInput: result.creator,
-         size: result.size
+         attackInputSize: result.size
        }, this.setState({ 
           creatorInput: result.creator.trim(),
-          creatorInputSize: result.size
+          attackInputSize: result.size
        }))
     })
   }     
@@ -60,13 +71,23 @@ class GameBoard extends React.Component{
 
   // Update creator input 
   updateInput = (e) =>{
+    let endGame = false
     let newStateString = e.target.value
-    const size = e.target.value.split(" ").join("").length
-    // let newStateString = this.state.creatorInput + e.key
-    // const size = newStateString.split(" ").join("").length
+    let size = e.target.value.split(" ").join("").length
+    if (size > 20){
+      newStateString = ''
+      size = 0
+      endGame = true
+    }
+
+
       database.ref('games/'+ this.props.gameId).update({
         creatorInput: newStateString,
-        size: size
+        attackInputSize: size
+      }, () =>{
+        if (endGame){
+          this.endGame(this.state.attack)
+        }
       })
   } 
 
@@ -99,60 +120,68 @@ class GameBoard extends React.Component{
   }
 
 
-
-
-
-
-  readyToPlay = (e) =>{
-    const userCreator = (this.props.currentUser.uid === this.creator)
-    const user =  userCreator ? 'creatorReady' : 'opponentReady'
+  readyToPlay = (isAttack) =>{
+    const user =  isAttack ? 'attackReady' : 'defenseReady'
+    // const userCreator = (this.props.currentUser.uid === this.creator)
+    // const user =  userCreator ? 'attackReady' : 'defenseReady'
     database.ref('games/'+ this.props.gameId).update({
-      [user]: true,
+      [user]: true
     }, this.setState({ 
-      [user]: true,
-      currentUserReady: true
+      [user]: true
     }))
   }
 
   componentDidMount(){
     const userCreator = (this.props.currentUser.uid === this.creator)
-    if (userCreator) window.addEventListener('keydown', this.updateInput);
     database.ref('games/'+ this.props.gameId).orderByKey().on('child_changed', (update)=>{
-      let key;
-      if (update.key === "size"){
-        key = "creatorInputSize"
-      } else if (update.key === 'creatorInput'){
-        key = 'creatorInput'
-      } else if (update.key === 'creatorReady'){
-        key = 'creatorReady'
-      } else if (update.key === 'opponentReady'){
-        key = 'opponentReady'
-      }
+      let key = update.key
       this.setState({
         [`${key}`]: update.val()
       }, ()=>{
-      if(this.state.opponentReady && this.state.creatorReady && !this.state.gameOn){
-        this.startCountdown()
-      }
       })
     })
+
+    database.ref('games/'+ this.props.gameId).orderByKey().on('child_added', (update)=>{
+      let key = update.key
+      this.setState({
+        [`${key}`]: update.val()
+      }, ()=>{
+      if(this.state.defenseReady && this.state.attackReady && !this.state.gameOn){
+        this.startCountdown()
+      } 
+      })
+    })
+
   }
 
  
   render(){
+    const otherScore = Object.assign({}, this.state.score);
+    delete otherScore[this.props.currentUser.uid];
+    const value = Object.values(otherScore)[0]
     return(
       <div className="game-board-container">
-      {(!this.state.creatorReady || !this.state.opponentReady) ? 
-        <StartGamePopUp onClick={this.readyToPlay} currentUserStatus={this.state.currentUserReady}/> : null
+      <div>Your score = {this.state.score[this.props.currentUser.uid]}</div>
+      <div>Other score {value}</div> 
+      {(!this.state.attackReady || !this.state.defenseReady) ? 
+        <StartGamePopUp 
+          onClick={this.readyToPlay} 
+          attackReady={this.state.attackReady} 
+          defenseReady={this.state.defenseReady}
+          currentUser={this.props.currentUser.uid}
+          userIsAttack={this.props.currentUser.uid === this.state.attack} /> 
+          : null
       }
+
+      {this.props.currentUser.uid === this.state.attack ? 'Attack' : 'Defense'}
       <p>{this.state.gameId}</p>
-      <div className="number-box">{this.state.creatorInputSize} <span>chars</span></div>
+      <div className="number-box">{this.state.attackInputSize} <span>chars</span></div>
       <div className="main-input-box">
         {this.state.creatorInput.split(" ").map((e,i) => <span key={i} className="word-span">{e}</span>)}
       </div>
         <h2 className="game-input-header">Type here 👇</h2>
         {
-          (this.props.currentUser.uid === this.creator) ? 
+          (this.props.currentUser.uid === this.state.attack) ? 
             <input className="game-input" onChange={this.updateInput} value={this.state.creatorInput} onPaste={this.onPaste} /> :
             <input className="game-input" onPaste={this.onPaste} onKeyDown={(e) => this.destroyWord(e, this.cleanInput)}/>        
         }

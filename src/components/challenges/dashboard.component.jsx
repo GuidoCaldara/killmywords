@@ -16,12 +16,7 @@ class Dashboard extends React.Component{
      }
   }
  
-  createUserGame = (challenge, game) => {
-      database.ref('games/').push(game).then((e)=> {
-      database.ref('users/'+ challenge.creator + '/games/').push({gameId: e.key})
-      database.ref('users/'+ challenge.opponent + '/games/').push({gameId: e.key})       
-    })      
-  }
+
 
   startGame = (challenge) => {
     const game = {
@@ -29,8 +24,11 @@ class Dashboard extends React.Component{
       opponent: challenge.opponent,
       created_at: new Date(),
       started: false,
-      opponentReady: false,
-      creatorReady: false
+      attackReady: false,
+      defenseReady: false,
+      score: {[challenge.creator]: 0, [challenge.opponent]: 0},
+      round: 1,
+
     }
     database.ref('games/').push(game).then((e)=> {
       database.ref('users/'+ challenge.creator + '/games/').push({...game, gameId: e.key})
@@ -82,6 +80,3 @@ class Dashboard extends React.Component{
 }
 
 export default Dashboard
-
-// let page = this.state.userGame ? <GameBoard {...gameInfo} /> :  <ChallengesList startGame={this.startGame} currentUser={this.props.currentUser}/>
-//        {this.state.spinner ? <Spinner/> : <ChallengesList startGame={this.startGame} currentUser={this.props.currentUser}/> }
